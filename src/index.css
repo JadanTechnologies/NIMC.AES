@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-sleek-bg: #F8FAFC;
+  --color-sleek-primary: #2563EB;
+  --color-sleek-ink: #1E293B;
+  --color-sleek-aside: #0F172A;
+  --color-sleek-sidebar-active: #334155;
+  --color-sleek-border: #E2E8F0;
+  --color-sleek-secondary: #64748B;
+  
+  --shadow-sleek: 0 1px 3px rgba(0,0,0,0.05);
+
+  --color-nimc-blue: #0A3D62;
+  --color-nimc-green: #218C74;
+}
+
+@layer base {
+  body {
+    @apply bg-sleek-bg text-sleek-ink antialiased font-sans;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95;
+  }
+  .btn-primary {
+    @apply bg-sleek-primary text-white hover:bg-sleek-primary/90;
+  }
+  .btn-outline {
+    @apply bg-white border border-slate-200 text-slate-600 hover:bg-slate-50;
+  }
+
+  .stat-card {
+    @apply bg-white p-5 rounded-xl border border-sleek-border shadow-sleek;
+  }
+  
+  .table-container {
+    @apply bg-white rounded-xl border border-sleek-border shadow-sleek overflow-hidden;
+  }
+
+  .status-badge {
+    @apply px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider;
+  }
+
+  .status-pending { @apply bg-amber-100 text-amber-800; }
+  .status-approved { @apply bg-emerald-100 text-emerald-800; }
+  .status-rejected { @apply bg-rose-100 text-rose-800; }
+
+  .progress-bg {
+    @apply w-full h-1.5 bg-slate-100 rounded-full overflow-hidden;
+  }
+  .progress-fill {
+    @apply h-full bg-sleek-primary transition-all duration-300 ease-out;
+  }
+}
+
+
