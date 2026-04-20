@@ -14,7 +14,11 @@ import {
   Upload,
   X,
   AlertCircle,
-  FileDown
+  FileDown,
+  Edit3,
+  Trash2,
+  Building,
+  Check
 } from 'lucide-react';
 import { StatusBadge } from '../components/StatusBadge';
 import { api } from '../lib/api';
@@ -43,8 +47,13 @@ export default function AdminDashboard() {
     device_imei: '',
     device_name: '',
     nin: '',
-    profile_picture: ''
+    profile_picture: '',
+    organization_name: '',
+    business_address: '',
+    contact_email: '',
+    contact_phone: ''
   });
+  const [editingEntryId, setEditingEntryId] = useState<number | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -52,7 +61,7 @@ export default function AdminDashboard() {
     loadData();
   }, []);
 
-  const handleManualFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleManualFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setManualForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -72,7 +81,14 @@ export default function AdminDashboard() {
       setBatchError('Full Name and NIN are required for batch manual entry');
       return;
     }
-    setManualBatchData(prev => [...prev, { ...manualForm, id: Date.now() }]);
+
+    if (editingEntryId) {
+      setManualBatchData(prev => prev.map(item => item.id === editingEntryId ? { ...manualForm, id: editingEntryId } : item));
+      setEditingEntryId(null);
+    } else {
+      setManualBatchData(prev => [...prev, { ...manualForm, id: Date.now() }]);
+    }
+
     setManualForm({
       full_name: '',
       state: '',
@@ -82,13 +98,41 @@ export default function AdminDashboard() {
       device_imei: '',
       device_name: '',
       nin: '',
-      profile_picture: ''
+      profile_picture: '',
+      organization_name: '',
+      business_address: '',
+      contact_email: '',
+      contact_phone: ''
     });
     setBatchError('');
   };
 
+  const editManualEntry = (item: any) => {
+    setManualForm(item);
+    setEditingEntryId(item.id);
+    setBatchMode('MANUAL');
+  };
+
   const removeFromManualBatch = (id: number) => {
     setManualBatchData(prev => prev.filter(item => item.id !== id));
+    if (editingEntryId === id) {
+      setEditingEntryId(null);
+      setManualForm({
+        full_name: '',
+        state: '',
+        lga: '',
+        address: '',
+        phone_number: '',
+        device_imei: '',
+        device_name: '',
+        nin: '',
+        profile_picture: '',
+        organization_name: '',
+        business_address: '',
+        contact_email: '',
+        contact_phone: ''
+      });
+    }
   };
 
   const submitManualBatch = async () => {
@@ -344,6 +388,28 @@ export default function AdminDashboard() {
                 </form>
               ) : (
                 <div className="space-y-6">
+                  {/* Progress Header if editing */}
+                  {editingEntryId && (
+                    <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl flex justify-between items-center">
+                      <p className="text-sm font-bold text-amber-700 flex items-center gap-2">
+                        <Edit3 size={16} /> Editing Entry
+                      </p>
+                      <button 
+                        onClick={() => {
+                          setEditingEntryId(null);
+                          setManualForm({
+                            full_name: '', state: '', lga: '', address: '', phone_number: '',
+                            device_imei: '', device_name: '', nin: '', profile_picture: '',
+                            organization_name: '', business_address: '', contact_email: '', contact_phone: ''
+                          });
+                        }}
+                        className="text-amber-700 hover:bg-amber-100 p-1 rounded-lg"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2 flex justify-center mb-2">
                        <label className="relative cursor-pointer group">
@@ -359,42 +425,80 @@ export default function AdminDashboard() {
                        </label>
                     </div>
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Full Name</label>
-                      <input name="full_name" value={manualForm.full_name} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="John Doe" />
+                    <div className="md:col-span-2 space-y-4">
+                      <div className="flex items-center gap-2 text-sleek-primary mb-2">
+                         <Users size={16} />
+                         <span className="text-xs font-bold uppercase tracking-wider">Personal Information</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Full Name</label>
+                          <input name="full_name" value={manualForm.full_name} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="John Doe" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">NIN Number</label>
+                          <input name="nin" value={manualForm.nin} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="12345678901" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">State</label>
+                          <input name="state" value={manualForm.state} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="Lagos" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Local Govt (LGA)</label>
+                          <input name="lga" value={manualForm.lga} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="Ikeja" />
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">NIN Number</label>
-                      <input name="nin" value={manualForm.nin} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="12345678901" />
+                    <div className="md:col-span-2 space-y-4 pt-2">
+                      <div className="flex items-center gap-2 text-sleek-primary mb-2">
+                         <Building size={16} />
+                         <span className="text-xs font-bold uppercase tracking-wider">Business Information</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div className="md:col-span-2">
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Business/Organization Name</label>
+                            <input name="organization_name" value={manualForm.organization_name} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="Arewa Tech Solutions" />
+                         </div>
+                         <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Business Email</label>
+                            <input name="contact_email" value={manualForm.contact_email} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="info@biz.com" />
+                         </div>
+                         <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Business Phone</label>
+                            <input name="contact_phone" value={manualForm.contact_phone} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="080 000 0000" />
+                         </div>
+                         <div className="md:col-span-2">
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Business Address</label>
+                            <textarea name="business_address" value={manualForm.business_address} onChange={handleManualFormChange} rows={2} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary resize-none" placeholder="No 12 Business Street, Area 1" />
+                         </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">State</label>
-                      <input name="state" value={manualForm.state} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="Lagos" />
+                    <div className="md:col-span-2 space-y-4 pt-2">
+                      <div className="flex items-center gap-2 text-sleek-primary mb-2">
+                         <FileDown size={16} />
+                         <span className="text-xs font-bold uppercase tracking-wider">Device Metadata</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Device IMEI</label>
+                          <input name="device_imei" value={manualForm.device_imei} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="351234..." />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Device Name</label>
+                          <input name="device_name" value={manualForm.device_name} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="Biometric Tablet X1" />
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Local Govt (LGA)</label>
-                      <input name="lga" value={manualForm.lga} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="Ikeja" />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Device IMEI</label>
-                      <input name="device_imei" value={manualForm.device_imei} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="351234..." />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Device Name</label>
-                      <input name="device_name" value={manualForm.device_name} onChange={handleManualFormChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-sleek-primary" placeholder="Biometric Tablet X1" />
-                    </div>
-
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 pt-4">
                        <button 
                          onClick={addToBatch}
-                         className="w-full py-2 bg-slate-900 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all"
+                         className="w-full py-3 bg-sleek-ink text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg active:scale-[0.98]"
                        >
-                         <Plus size={16} /> Add to Current Batch
+                         {editingEntryId ? <Check size={18} /> : <Plus size={18} />}
+                         {editingEntryId ? 'Update Entry in Batch' : 'Add to Current Batch'}
                        </button>
                     </div>
                   </div>
@@ -404,21 +508,36 @@ export default function AdminDashboard() {
                        <h3 className="text-xs font-bold text-slate-400 uppercase mb-3 flex justify-between">
                          Items in Batch <span>{manualBatchData.length} entries</span>
                        </h3>
-                       <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2">
+                       <div className="space-y-2 max-h-[220px] overflow-y-auto pr-2">
                           {manualBatchData.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <div key={item.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group">
                                <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 overflow-hidden">
+                                  <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 overflow-hidden shrink-0">
                                      {item.profile_picture ? <img src={item.profile_picture} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-300">P</div>}
                                   </div>
-                                  <div>
-                                     <p className="text-sm font-bold text-slate-900">{item.full_name}</p>
-                                     <p className="text-[10px] text-slate-400 uppercase tracking-wider">{item.nin}</p>
+                                  <div className="truncate">
+                                     <p className="text-sm font-bold text-slate-900 truncate">{item.full_name}</p>
+                                     <p className="text-[10px] text-slate-400 uppercase tracking-wider truncate">
+                                       {item.organization_name || 'Individual'} • {item.nin}
+                                     </p>
                                   </div>
                                </div>
-                               <button onClick={() => removeFromManualBatch(item.id)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg">
-                                  <X size={14} />
-                               </button>
+                               <div className="flex gap-1">
+                                  <button 
+                                    onClick={() => editManualEntry(item)} 
+                                    className="p-1.5 text-slate-400 hover:text-sleek-primary hover:bg-white rounded-lg transition-all"
+                                    title="Edit entry"
+                                  >
+                                     <Edit3 size={14} />
+                                  </button>
+                                  <button 
+                                    onClick={() => removeFromManualBatch(item.id)} 
+                                    className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-white rounded-lg transition-all"
+                                    title="Delete entry"
+                                  >
+                                     <Trash2 size={14} />
+                                  </button>
+                               </div>
                             </div>
                           ))}
                        </div>
